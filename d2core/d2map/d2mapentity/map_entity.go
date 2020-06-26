@@ -11,6 +11,7 @@ import (
 type MapEntity interface {
 	Render(target d2render.Surface)
 	Advance(tickTime float64)
+	SetPosition(x, y float64)
 	GetPosition() (float64, float64)
 	GetPositionF() (float64, float64)
 	Name() string
@@ -24,13 +25,19 @@ type mapEntity struct {
 	subcellX, subcellY float64 // Subcell coordinates within the current tile
 	weaponClass        string
 	offsetX, offsetY   int
-	TargetX            float64
-	TargetY            float64
-	Speed              float64
-	path               []d2astar.Pather
+	directioner        func(direction int)
 
-	done        func()
-	directioner func(direction int)
+	// TODO convert to move action
+	TargetX float64
+	TargetY float64
+	Speed   float64
+	path    []d2astar.Pather
+	done    func()
+}
+
+func (m *mapEntity) SetPosition(x, y float64) {
+	m.LocationX = x
+	m.LocationY = y
 }
 
 // createMapEntity creates an instance of mapEntity
