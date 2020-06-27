@@ -124,9 +124,6 @@ func (v *Player) Advance(tickTime float64) {
 		v.SetAnimationMode(v.GetAnimationMode().String())
 	}
 	v.composite.Advance(tickTime)
-	if v.lastPathSize != len(v.path) {
-		v.lastPathSize = len(v.path)
-	}
 
 	if v.composite.GetAnimationMode() != v.animationMode {
 		v.animationMode = v.composite.GetAnimationMode()
@@ -135,8 +132,8 @@ func (v *Player) Advance(tickTime float64) {
 
 func (v *Player) Render(target d2interface.Surface) {
 	target.PushTranslation(
-		v.offsetX+int((v.subcellX-v.subcellY)*16),
-		v.offsetY+int(((v.subcellX+v.subcellY)*8)-5),
+		int((v.subcellX-v.subcellY)*16),
+		int(((v.subcellX+v.subcellY)*8)-5),
 	)
 	defer target.Pop()
 	v.composite.Render(target)

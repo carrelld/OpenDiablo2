@@ -26,7 +26,6 @@ type MapEngine struct {
 	size          d2common.Size              // The size of the map, in tiles
 	levelType     d2datadict.LevelTypeRecord // The level type of this map
 	dt1TileData   []d2dt1.Tile               // The DT1 tile data
-	walkMesh      []d2common.PathTile        // The walk mesh
 	startSubTileX int                        // The starting X position
 	startSubTileY int                        // The starting Y position
 	dt1Files      []string                   // The list of DS1 strings
@@ -36,10 +35,6 @@ type MapEngine struct {
 func CreateMapEngine() *MapEngine {
 	engine := &MapEngine{}
 	return engine
-}
-
-func (m *MapEngine) WalkMesh() *[]d2common.PathTile {
-	return &m.walkMesh
 }
 
 // Returns the starting position on the map in sub-tiles
@@ -53,7 +48,6 @@ func (m *MapEngine) ResetMap(levelType d2enum.RegionIdType, width, height int) {
 	m.size = d2common.Size{Width: width, Height: height}
 	m.tiles = make([]d2ds1.TileRecord, width*height)
 	m.dt1TileData = make([]d2dt1.Tile, 0)
-	m.walkMesh = make([]d2common.PathTile, width*height*25)
 	m.dt1Files = make([]string, 0)
 
 	for idx := range m.levelType.Files {

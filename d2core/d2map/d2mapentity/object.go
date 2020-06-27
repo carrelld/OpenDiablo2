@@ -76,8 +76,8 @@ func (ob *Object) Selectable() bool {
 // Render draws this animated entity onto the target
 func (ob *Object) Render(target d2interface.Surface) {
 	target.PushTranslation(
-		ob.offsetX+int((ob.subcellX-ob.subcellY)*16),
-		ob.offsetY+int(((ob.subcellX+ob.subcellY)*8)-5),
+		int((ob.subcellX-ob.subcellY)*16),
+		int(((ob.subcellX+ob.subcellY)*8)-5),
 	)
 	if ob.highlight {
 		ob.nameLabel.SetText(d2common.TranslateString(ob.objectRecord.Name))

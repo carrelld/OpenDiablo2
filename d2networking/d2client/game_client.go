@@ -100,28 +100,25 @@ func (g *GameClient) OnPacketReceived(packet d2netpacket.NetPacket) error {
 	case d2netpackettype.MovePlayer:
 		movePlayer := packet.PacketData.(d2netpacket.MovePlayerPacket)
 		player := g.Players[movePlayer.PlayerId]
-		path, _, _ := g.MapEngine.PathFind(movePlayer.StartX, movePlayer.StartY, movePlayer.DestX, movePlayer.DestY)
-		if len(path) > 0 {
-			player.SetPath(path, func() {
-				tile := g.MapEngine.TileAt(player.TileX, player.TileY)
-				if tile == nil {
-					return
-				}
+		player.SetTarget(movePlayer.DestX*5, movePlayer.DestY*5, func() {
+			tile := g.MapEngine.TileAt(player.TileX, player.TileY)
+			if tile == nil {
+				return
+			}
 
-				regionType := tile.RegionType
-				if regionType == d2enum.RegionAct1Town {
-					player.SetIsInTown(true)
-				} else {
-					player.SetIsInTown(false)
-				}
-				player.SetAnimationMode(player.GetAnimationMode().String())
-			})
-		}
+			regionType := tile.RegionType
+			if regionType == d2enum.RegionAct1Town {
+				player.SetIsInTown(true)
+			} else {
+				player.SetIsInTown(false)
+			}
+			player.SetAnimationMode(player.GetAnimationMode().String())
+		})
 	case d2netpackettype.CastSkill:
 		playerCast := packet.PacketData.(d2netpacket.CastPacket)
 		player := g.Players[playerCast.SourceEntityID]
 		player.SetCasting()
-		player.ClearPath()
+		player.SetTarget(player.LocationX, player.LocationY, func() {})
 		// currently hardcoded to missile skill
 		missile, err := d2mapentity.CreateMissile(
 			int(player.LocationX),

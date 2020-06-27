@@ -330,8 +330,8 @@ func (mr *MapRenderer) renderTileDebug(ax, ay int, debugVisLevel int, target d2i
 			for xx := 0; xx < 5; xx++ {
 				isoX := (xx - yy) * 16
 				isoY := (xx + yy) * 8
-				var walkableArea = (*mr.mapEngine.WalkMesh())[((yy+(ay*5))*mr.mapEngine.Size().Width*5)+xx+(ax*5)]
-				if !walkableArea.Walkable {
+				//if !walkableArea.Walkable {
+				if false {
 					target.PushTranslation(isoX-3, isoY+4)
 					target.DrawRect(5, 5, tileCollisionColor)
 					target.Pop()
