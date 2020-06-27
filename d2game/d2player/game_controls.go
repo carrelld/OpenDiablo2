@@ -248,9 +248,10 @@ func (g *GameControls) OnMouseButtonDown(event d2input.MouseEvent) bool {
 }
 
 func (g *GameControls) ShootMissile(px float64, py float64) bool {
+	hX, hY := g.hero.GetPosition()
 	missile, err := d2mapentity.CreateMissile(
-		int(g.hero.LocationX),
-		int(g.hero.LocationY),
+		int(hX),
+		int(hY),
 		d2datadict.Missiles[missileID],
 	)
 	if err != nil {
@@ -258,8 +259,8 @@ func (g *GameControls) ShootMissile(px float64, py float64) bool {
 	}
 
 	rads := d2common.GetRadiansBetween(
-		g.hero.LocationX,
-		g.hero.LocationY,
+		hX,
+		hY,
 		px*5,
 		py*5,
 	)
@@ -366,7 +367,7 @@ func (g *GameControls) Render(target d2render.Surface) {
 			continue
 		}
 
-		entScreenXf, entScreenYf := g.mapRenderer.WorldToScreenF(entity.GetPositionF())
+		entScreenXf, entScreenYf := g.mapRenderer.WorldToScreenF(entity.GetPosition())
 		entScreenX := int(math.Floor(entScreenXf))
 		entScreenY := int(math.Floor(entScreenYf))
 

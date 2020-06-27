@@ -27,7 +27,7 @@ func CreateObject(x, y int, object *d2datadict.ObjectLookupRecord, palettePath s
 		composite:    composite,
 		objectLookup: object,
 	}
-	entity.mapEntity.directioner = entity.rotate
+	//entity.mapEntity.directioner = entity.rotate
 	entity.objectRecord = d2datadict.Objects[object.ObjectsTxtId]
 	return entity, nil
 }
@@ -49,11 +49,11 @@ func (ob *Object) SetMode(animationMode, weaponClass string, direction int) erro
 
 // Render draws this animated entity onto the target
 func (ob *Object) Render(target d2render.Surface) {
-	target.PushTranslation(
-		ob.offsetX+int((ob.subcellX-ob.subcellY)*16),
-		ob.offsetY+int(((ob.subcellX+ob.subcellY)*8)-5),
-	)
-	defer target.Pop()
+	//target.PushTranslation(
+	//	ob.offsetX+int((ob.subcellX-ob.subcellY)*16),
+	//	ob.offsetY+int(((ob.subcellX+ob.subcellY)*8)-5),
+	//)
+	//defer target.Pop()
 	ob.composite.Render(target)
 }
 

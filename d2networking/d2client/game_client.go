@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/OpenDiablo2/OpenDiablo2/d2core/d2map/d2mapentity/d2action"
+
 	"github.com/OpenDiablo2/OpenDiablo2/d2core/d2map/d2mapgen"
 
 	"github.com/OpenDiablo2/OpenDiablo2/d2core/d2map/d2mapengine"
@@ -86,22 +88,9 @@ func (g *GameClient) OnPacketReceived(packet d2netpacket.NetPacket) error {
 	case d2netpackettype.MovePlayer:
 		movePlayer := packet.PacketData.(d2netpacket.MovePlayerPacket)
 		player := g.Players[movePlayer.PlayerId]
-		path, _, _ := g.MapEngine.PathFind(movePlayer.StartX, movePlayer.StartY, movePlayer.DestX, movePlayer.DestY)
+		path, _, _ := g.MapEngine.PathFind(movePlayer.StartX, movePlayer.StartY, movePlayer.DestX, movePlayer.DestY) // TODO simplify calculation
 		if len(path) > 0 {
-			player.SetPath(path, func() {
-				tile := g.MapEngine.TileAt(player.TileX, player.TileY)
-				if tile == nil {
-					return
-				}
-
-				regionType := tile.RegionType
-				if regionType == d2enum.RegionAct1Town {
-					player.SetIsInTown(true)
-				} else {
-					player.SetIsInTown(false)
-				}
-				player.SetAnimationMode(player.GetAnimationMode().String())
-			})
+			player.SetAction(d2action.NewMoveAction(player, movePlayer.DestX, movePlayer.DestY))
 		}
 	case d2netpackettype.Ping:
 		g.clientConnection.SendPacketToServer(d2netpacket.CreatePongPacket(g.PlayerId))

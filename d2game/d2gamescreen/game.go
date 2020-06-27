@@ -84,7 +84,8 @@ func (v *Game) Advance(tickTime float64) error {
 	if v.ticksSinceLevelCheck > 1.0 {
 		v.ticksSinceLevelCheck = 0
 		if v.localPlayer != nil {
-			tile := v.gameClient.MapEngine.TileAt(v.localPlayer.TileX, v.localPlayer.TileY)
+			pX, pY := v.localPlayer.GetPosition()
+			tile := v.gameClient.MapEngine.TileAt(int(pX)/5, int(pY)/5)
 			if tile != nil {
 				switch tile.RegionType {
 				case d2enum.RegionAct1Town: // Rogue encampent
@@ -124,14 +125,16 @@ func (v *Game) Advance(tickTime float64) error {
 
 	// Update the camera to focus on the player
 	if v.localPlayer != nil && !v.gameControls.FreeCam {
-		rx, ry := v.mapRenderer.WorldToOrtho(v.localPlayer.LocationX/5, v.localPlayer.LocationY/5)
+		pX, pY := v.localPlayer.GetPosition()
+		rx, ry := v.mapRenderer.WorldToOrtho(pX/5, pY/5)
 		v.mapRenderer.MoveCameraTo(rx, ry)
 	}
 	return nil
 }
 
 func (v *Game) OnPlayerMove(x, y float64) {
-	heroPosX := v.localPlayer.LocationX / 5.0
-	heroPosY := v.localPlayer.LocationY / 5.0
+	pX, pY := v.localPlayer.GetPosition()
+	heroPosX := pX / 5.0
+	heroPosY := pY / 5.0
 	v.gameClient.SendPacketToServer(d2netpacket.CreateMovePlayerPacket(v.gameClient.PlayerId, heroPosX, heroPosY, x, y))
 }

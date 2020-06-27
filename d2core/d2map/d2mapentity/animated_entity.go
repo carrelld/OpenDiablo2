@@ -21,17 +21,17 @@ func CreateAnimatedEntity(x, y int, animation *d2asset.Animation) *AnimatedEntit
 		mapEntity: createMapEntity(x, y),
 		animation: animation,
 	}
-	entity.mapEntity.directioner = entity.rotate
+	//entity.mapEntity.directioner = entity.rotate
 	return entity
 }
 
 // Render draws this animated entity onto the target
 func (ae *AnimatedEntity) Render(target d2render.Surface) {
-	target.PushTranslation(
-		ae.offsetX+int((ae.subcellX-ae.subcellY)*16),
-		ae.offsetY+int(((ae.subcellX+ae.subcellY)*8)-5),
-	)
-	defer target.Pop()
+	//target.PushTranslation(
+	//	ae.offsetX+int((ae.subcellX-ae.subcellY)*16),
+	//	ae.offsetY+int(((ae.subcellX+ae.subcellY)*8)-5),
+	//)
+	//defer target.Pop()
 	ae.animation.Render(target)
 }
 

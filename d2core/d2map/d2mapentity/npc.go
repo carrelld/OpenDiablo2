@@ -22,7 +22,7 @@ type NPC struct {
 	repetitions  int
 	direction    int
 	objectLookup *d2datadict.ObjectLookupRecord
-	name string
+	name         string
 }
 
 func CreateNPC(x, y int, object *d2datadict.ObjectLookupRecord, direction int) *NPC {
@@ -38,7 +38,7 @@ func CreateNPC(x, y int, object *d2datadict.ObjectLookupRecord, direction int) *
 		HasPaths:     false,
 	}
 	result.SetMode(object.Mode, object.Class, direction)
-	result.mapEntity.directioner = result.rotate
+	//result.mapEntity.directioner = result.rotate
 
 	switch object.Act {
 	case 1:
@@ -64,11 +64,11 @@ func CreateNPC(x, y int, object *d2datadict.ObjectLookupRecord, direction int) *
 }
 
 func (v *NPC) Render(target d2render.Surface) {
-	target.PushTranslation(
-		v.offsetX+int((v.subcellX-v.subcellY)*16),
-		v.offsetY+int(((v.subcellX+v.subcellY)*8)-5),
-	)
-	defer target.Pop()
+	//target.PushTranslation(
+	//	v.offsetX+int((v.subcellX-v.subcellY)*16),
+	//	v.offsetY+int(((v.subcellX+v.subcellY)*8)-5),
+	//)
+	//defer target.Pop()
 	v.composite.Render(target)
 }
 
@@ -92,18 +92,18 @@ func (v *NPC) SetPaths(paths []d2common.Path) {
 }
 
 func (v *NPC) Advance(tickTime float64) {
-	v.Step(tickTime)
+	//v.Step(tickTime)
 	v.composite.Advance(tickTime)
 
 	if v.HasPaths && v.wait() {
 		// If at the target, set target to the next path.
 		v.isDone = false
 		path := v.NextPath()
-		v.SetTarget(
-			float64(path.X),
-			float64(path.Y),
-			v.next,
-		)
+		//v.SetTarget(
+		//	float64(path.X),
+		//	float64(path.Y),
+		//	v.next,
+		//)
 		v.action = path.Action
 	}
 }
@@ -141,11 +141,11 @@ func (v *NPC) next() {
 // rotate sets direction and changes animation
 func (v *NPC) rotate(direction int) {
 	var newMode d2enum.MonsterAnimationMode
-	if !v.IsAtTarget() {
-		newMode = d2enum.AnimationModeMonsterWalk
-	} else {
-		newMode = d2enum.AnimationModeMonsterNeutral
-	}
+	//if !v.IsAtTarget() {
+	//	newMode = d2enum.AnimationModeMonsterWalk
+	//} else {
+	newMode = d2enum.AnimationModeMonsterNeutral
+	//}
 	if newMode.String() != v.composite.GetAnimationMode() || direction != v.direction {
 		v.SetMode(newMode.String(), v.weaponClass, direction)
 	}

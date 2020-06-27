@@ -3,6 +3,8 @@ package d2mapentity
 import (
 	"image/color"
 
+	"github.com/OpenDiablo2/OpenDiablo2/d2core/d2map/d2mapentity/d2action"
+
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2data/d2datadict"
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2enum"
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2resource"
@@ -28,6 +30,19 @@ type Player struct {
 	animationMode string
 	isRunToggled  bool
 	isRunning     bool
+	speed         float64
+}
+
+func (p *Player) Speed() float64 {
+	return p.speed
+}
+
+func (p *Player) SetDirection(angle int) {
+	newAnimationMode := p.GetAnimationMode().String()
+
+	if newAnimationMode != p.composite.GetAnimationMode() || angle != p.direction {
+		p.SetMode(newAnimationMode, p.weaponClass, angle)
+	}
 }
 
 // run speed should be walkspeed * 1.5, since in the original game it is 6 yards walk and 9 yards run.
@@ -73,8 +88,7 @@ func CreatePlayer(id, name string, x, y int, direction int, heroType d2enum.Hero
 		isInTown:     true,
 		isRunning:    true,
 	}
-	result.SetSpeed(baseRunSpeed)
-	result.mapEntity.directioner = result.rotate
+	result.speed = baseRunSpeed
 	result.nameLabel.Alignment = d2ui.LabelAlignCenter
 	result.nameLabel.SetText(name)
 	result.nameLabel.Color = color.White
@@ -105,9 +119,9 @@ func (p *Player) SetIsRunning(isRunning bool) {
 	p.isRunning = isRunning
 
 	if isRunning {
-		p.SetSpeed(baseRunSpeed)
+		p.speed = baseRunSpeed
 	} else {
-		p.SetSpeed(baseWalkSpeed)
+		p.speed = baseWalkSpeed
 	}
 }
 
@@ -116,11 +130,10 @@ func (p Player) IsInTown() bool {
 }
 
 func (v *Player) Advance(tickTime float64) {
-	v.Step(tickTime)
-	v.composite.Advance(tickTime)
-	if v.lastPathSize != len(v.path) {
-		v.lastPathSize = len(v.path)
+	if v.mapEntity.Action != nil {
+		v.mapEntity.Action.Advance(tickTime)
 	}
+	v.composite.Advance(tickTime)
 
 	if v.composite.GetAnimationMode() != v.animationMode {
 		v.animationMode = v.composite.GetAnimationMode()
@@ -128,11 +141,11 @@ func (v *Player) Advance(tickTime float64) {
 }
 
 func (v *Player) Render(target d2render.Surface) {
-	target.PushTranslation(
-		v.offsetX+int((v.subcellX-v.subcellY)*16),
-		v.offsetY+int(((v.subcellX+v.subcellY)*8)-5),
-	)
-	defer target.Pop()
+	//target.PushTranslation(
+	//	v.offsetX+int((v.subcellX-v.subcellY)*16),
+	//	v.offsetY+int(((v.subcellX+v.subcellY)*8)-5),
+	//)
+	//defer target.Pop()
 	v.composite.Render(target)
 	//v.nameLabel.X = v.offsetX
 	//v.nameLabel.Y = v.offsetY - 100
@@ -154,20 +167,8 @@ func (v *Player) SetMode(animationMode, weaponClass string, direction int) error
 }
 
 func (v *Player) GetAnimationMode() d2enum.PlayerAnimationMode {
-	if v.IsRunning() && !v.IsAtTarget() {
-		return d2enum.AnimationModePlayerRun
-	}
-
-	if v.IsInTown() {
-		if !v.IsAtTarget() {
-			return d2enum.AnimationModePlayerTownWalk
-		}
-
-		return d2enum.AnimationModePlayerTownNeutral
-	}
-
-	if !v.IsAtTarget() {
-		return d2enum.AnimationModePlayerWalk
+	if v.mapEntity.Action != nil {
+		v.mapEntity.Action.AnimationMode()
 	}
 
 	return d2enum.AnimationModePlayerNeutral
@@ -177,15 +178,11 @@ func (v *Player) SetAnimationMode(animationMode string) error {
 	return v.composite.SetMode(animationMode, v.weaponClass, v.direction)
 }
 
-// rotate sets direction and changes animation
-func (v *Player) rotate(direction int) {
-	newAnimationMode := v.GetAnimationMode().String()
-
-	if newAnimationMode != v.composite.GetAnimationMode() || direction != v.direction {
-		v.SetMode(newAnimationMode, v.weaponClass, direction)
-	}
-}
-
 func (v *Player) Name() string {
 	return v.name
+}
+
+func (p *Player) SetAction(action d2action.Action) {
+	p.mapEntity.Action = action
+	// TODO add oncomplete listener to probably do something
 }

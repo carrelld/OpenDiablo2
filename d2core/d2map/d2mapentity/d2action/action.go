@@ -3,10 +3,7 @@ package d2action
 import (
 	"math"
 
-	"github.com/OpenDiablo2/OpenDiablo2/d2core/d2map/d2mapentity"
-
 	"github.com/OpenDiablo2/OpenDiablo2/d2common"
-	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2astar"
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2enum"
 )
 
@@ -16,64 +13,76 @@ type Action interface {
 	Advance(elapsed float64) error //maybe?
 }
 
-type Move struct {
-	entity  d2mapentity.MapEntity
-	TargetX float64
-	TargetY float64
-	Speed   float64
-	path    []d2astar.Pather
-	done    func()
+type MovableEntity interface {
+	Speed() float64
+	GetPosition() (x, y float64)
+	SetPosition(x, y float64)
+	SetDirection(angle int)
 }
 
-func NewMoveAction(entity d2mapentity.MapEntity, x, y float64) *Move {
+type Move struct {
+	entity  MovableEntity
+	targetX float64
+	targetY float64
+
+	onCompleteFn func()
+}
+
+func NewMoveAction(m MovableEntity, x, y float64) *Move {
 	move := Move{
-		entity:  entity,
-		TargetX: x,
-		TargetY: y,
+		entity:       m,
+		targetX:      x,
+		targetY:      y,
+		onCompleteFn: func() {},
 	}
 	return &move
 }
 
 func (m *Move) AnimationMode() d2enum.PlayerAnimationMode {
-	panic("implement me")
+	return d2enum.AnimationModePlayerWalk
 }
 
 func (m *Move) OnComplete(listener func()) {
-	panic("implement me")
+	m.onCompleteFn = listener
 }
 
 func (m *Move) Advance(elapsed float64) error {
-	panic("implement me")
+	m.Step(elapsed)
+	if m.IsAtTarget() {
+		m.onCompleteFn()
+	}
+	return nil
 }
 
-func (m *Move) SetPath(path []d2astar.Pather, done func()) {
-	m.path = path
-	m.done = done
+//if m.directioner != nil {
+//	angle := 359 - d2common.GetAngleBetween(
+//		m.LocationX,
+//		m.LocationY,
+//		tx,
+//		ty,
+//	)
+//	m.directioner(angleToDirection(float64(angle)))
+//}
+
+func angleToDirection(angle float64) int {
+	degreesPerDirection := 360.0 / 64.0
+	offset := 45.0 - (degreesPerDirection / 2)
+
+	newDirection := int((angle - offset) / degreesPerDirection)
+
+	if newDirection >= 64 {
+		newDirection = newDirection - 64
+	} else if newDirection < 0 {
+		newDirection = 64 + newDirection
+	}
+
+	return newDirection
 }
 
-func (m *Move) ClearPath() {
-	m.path = nil
-}
+func getStepLength(speed float64, angleDegrees int, tickTime float64) (float64, float64) {
+	length := tickTime * speed
 
-func (m *Move) SetSpeed(speed float64) {
-	m.Speed = speed
-}
-
-func (m *Move) GetSpeed() float64 {
-	return m.Speed
-}
-
-func (m *Move) getStepLength(tickTime float64) (float64, float64) {
-	length := tickTime * m.Speed
-
-	entityX, entityY := m.entity.GetPosition()
-	angle := 359 - d2common.GetAngleBetween(
-		entityX,
-		entityY,
-		m.TargetX,
-		m.TargetY,
-	)
-	radians := (math.Pi / 180.0) * float64(angle)
+	radians := (math.Pi / 180.0) * float64(angleDegrees)
 	oneStepX := length * math.Cos(radians)
 	oneStepY := length * math.Sin(radians)
 	return oneStepX, oneStepY
@@ -81,75 +90,26 @@ func (m *Move) getStepLength(tickTime float64) (float64, float64) {
 
 func (m *Move) IsAtTarget() bool {
 	x, y := m.entity.GetPosition()
-	return math.Abs(x-m.TargetX) < 0.0001 && math.Abs(y-m.TargetY) < 0.0001 && len(m.path) == 0
+	return math.Abs(x-m.targetX) < 0.0001 && math.Abs(y-m.targetY) < 0.0001
 }
 
 func (m *Move) Step(tickTime float64) {
 	if m.IsAtTarget() {
-		if m.done != nil {
-			m.done()
-			m.done = nil
-		}
 		return
 	}
 
-	x, y := m.entity.GetPosition()
-	stepX, stepY := m.getStepLength(tickTime)
+	entityX, entityY := m.entity.GetPosition()
+	angle := 359 - d2common.GetAngleBetween(
+		entityX,
+		entityY,
+		m.targetX,
+		m.targetY,
+	)
 
-	for {
-		if d2common.AlmostEqual(x, m.TargetX, 0.0001) {
-			stepX = 0
-		}
-		if d2common.AlmostEqual(y, m.TargetY, 0.0001) {
-			stepY = 0
-		}
-		x, stepX = d2common.AdjustWithRemainder(x, stepX, m.TargetX)
-		y, stepY = d2common.AdjustWithRemainder(y, stepY, m.TargetY)
+	stepX, stepY := getStepLength(m.entity.Speed(), angle, tickTime)
 
-		m.entity.subcellX = 1 + math.Mod(x, 5)
-		m.entity.subcellY = 1 + math.Mod(y, 5)
-		m.entity.TileX = int(x / 5)
-		m.entity.TileY = int(y / 5)
+	newX, _ := d2common.AdjustWithRemainder(entityX, stepX, m.targetX)
+	newY, _ := d2common.AdjustWithRemainder(entityX, stepY, m.targetY)
 
-		if d2common.AlmostEqual(x, m.TargetX, 0.01) && d2common.AlmostEqual(y, m.TargetY, 0.01) {
-			if len(m.path) > 0 {
-				m.entity.SetTarget(m.path[0].(*d2common.PathTile).X*5, m.path[0].(*d2common.PathTile).Y*5, m.done)
-
-				if len(m.path) > 1 {
-					m.path = m.path[1:]
-				} else {
-					m.path = []d2astar.Pather{}
-				}
-			} else {
-				x = m.TargetX
-				y = m.TargetY
-				m.entity.subcellX = 1 + math.Mod(x, 5)
-				m.entity.subcellY = 1 + math.Mod(y, 5)
-				m.entity.TileX = int(x / 5)
-				m.entity.TileY = int(y / 5)
-			}
-		}
-
-		if stepX == 0 && stepY == 0 {
-			break
-		}
-
-	}
-}
-
-// SetTarget sets target coordinates and changes animation based on proximity and direction
-func (m *Move) SetTarget(tx, ty float64, done func()) {
-	m.TargetX, m.TargetY = tx, ty
-	m.done = done
-
-	if m.entity.directioner != nil {
-		x, y := m.entity.GetPosition()
-		angle := 359 - d2common.GetAngleBetween(
-			x,
-			y,
-			tx,
-			ty,
-		)
-		m.entity.directioner(d2mapentity.angleToDirection(float64(angle)))
-	}
+	m.entity.SetPosition(newX, newY)
 }

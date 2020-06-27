@@ -33,7 +33,7 @@ func Initialize(audioProvider AudioProvider) error {
 func PlayBGM(song string) error {
 	verifyWasInit()
 	go func() {
-		singleton.PlayBGM(song)
+		//singleton.PlayBGM(song)
 	}()
 	return nil
 }

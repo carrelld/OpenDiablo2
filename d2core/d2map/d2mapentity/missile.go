@@ -2,7 +2,6 @@ package d2mapentity
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2data/d2datadict"
 	"github.com/OpenDiablo2/OpenDiablo2/d2common/d2resource"
@@ -12,6 +11,7 @@ import (
 type Missile struct {
 	*AnimatedEntity
 	record *d2datadict.MissileRecord
+	speed  float64
 }
 
 func CreateMissile(x, y int, record *d2datadict.MissileRecord) (*Missile, error) {
@@ -37,21 +37,22 @@ func CreateMissile(x, y int, record *d2datadict.MissileRecord) (*Missile, error)
 		AnimatedEntity: entity,
 		record:         record,
 	}
-	result.Speed = float64(record.Velocity)
+	result.speed = float64(record.Velocity)
 	return result, nil
 }
 
-func (m *Missile) SetRadians(angle float64, done func()) {
-	r := float64(m.record.Range)
+func (m *Missile) SetRadians(rad float64, done func()) {
+	//r := float64(m.record.Range)
+	//
+	//eX, eY := m.GetPosition()
+	//x := eX + (r * math.Cos(rad))
+	//y := eY + (r * math.Sin(rad))
 
-	x := m.LocationX + (r * math.Cos(angle))
-	y := m.LocationY + (r * math.Sin(angle))
-
-	m.SetTarget(x, y, done)
+	//m.SetTarget(x, y, done)
 }
 
 func (m *Missile) Advance(tickTime float64) {
 	// TODO: collision detection
-	m.Step(tickTime)
+	//m.Step(tickTime)
 	m.AnimatedEntity.Advance(tickTime)
 }
